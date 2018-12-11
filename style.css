@@ -18,3 +18,18 @@ body {
   margin: 0px 16px;
   font-family: "Open Sans", sans-serif;
 }
+
+#progressbar {
+  background-color: #101013;
+  border-radius: 13px;
+  /* (height of inner div) / 2 + padding */
+  padding: 3px;
+}
+
+#progressbar>div {
+  background-color: orange;
+  width: 40%;
+  /* Adjust with JavaScript */
+  height: 5px;
+  border-radius: 10px;
+}
