@@ -1,0 +1,20 @@
+html {
+  margin:    -16px auto;
+  max-width: 640px;
+  background-color: #202026;
+  color: #d0d0d0;
+}
+a:link {
+    color: #6060d0;
+}
+a:visited {
+    color: #606080;
+}
+a:hover {
+    color: #d86;
+}
+body {
+  margin: 0px 16px;
+  font-family: "Open Sans", sans-serif;
+}
+
