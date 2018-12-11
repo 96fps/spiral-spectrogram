@@ -6,11 +6,11 @@ function preload(){
 
 function setup() {
    spin=0;
-   var c = createCanvas(512,512);
+   var c = createCanvas(256,256);
    c.drop(gotFile);
    noFill();
    song.loop();
-   fft = new p5.FFT();
+   fft = new p5.FFT(0.05);
    fft.setInput(song);
 }
 
@@ -23,28 +23,28 @@ function gotFile(file){
 }
 
 function draw() {
+   //background(color("#202026"));
    background(0);
-   if(song.isPlaying()){
-	spin-=0.01;
-   }
    var spectrum = fft.analyze();
-     var unit = height/4;
+   var unit = height/4;
      var cx = width/2;
      var cy= height/2;
-   var cov = 0.9;
+    var cov = 0.9;
     var cov2 =0.99;
   from = color(0, 0, 32, 32);
   to = color(255, 0, 255, 255);
   var invis = color (127,0,127,0);
   var step = 3.1415/4;
   var scv=9.05;
-  stroke(0);
-  beginShape();
-  vertex(0+cx,0+cy);
-  vertex(sin(step)*unit+cx,cos(step)*unit+cy);
-  endShape();
+ //fill(0);
+  //ellipse(cx,cy, 512, 512);
+  //stroke(0);
+//  beginShape();
+ // vertex(0+cx,0+cy);
+  //vertex(sin(step)*unit+cx,cos(step)*unit+cy);
+  //endShape();
   // beginShape();
-  for (i = 0; i<spectrum.length; i++) {
+  for (i = 0; i<spectrum.length*.4; i++) {
   // for (i = 0; i<100; i++) {
 //     var mag= map(spectrum[i], 0, 255, 0, 1);
      var prog = i / spectrum.length;
@@ -52,14 +52,14 @@ function draw() {
      var octv = oct/(2*3.1415);
      var octmax = log(spectrum.length,2)*scv;
      var octvmax = octmax/(2*3.1415);
-     var x = sin(oct+spin);
-     var y = cos(oct+spin);
+     var x = sin(oct);
+     var y = cos(oct);
      var oct2 = log(i+cov,2)*scv;
-     var x2 = sin(oct2+spin);
-     var y2 = cos(oct2+spin);
+     var x2 = sin(oct2);
+     var y2 = cos(oct2);
      var oct3 = log(i+cov*0.5,2)*scv;
-     var x3 = sin(oct3+spin);
-     var y3 = cos(oct3+spin);
+     var x3 = sin(oct3);
+     var y3 = cos(oct3);
      var sw = unit/8;
      var bmax=(octvmax);
      var ratio = 2*unit/bmax;
@@ -99,3 +99,4 @@ function mousePressed() {
     // background(0,255,0);
   }
 }
+
