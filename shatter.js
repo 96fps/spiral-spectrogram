@@ -3,7 +3,7 @@ var song, mic, fft;
 function setup() {
    createCanvas(512,512);
    noFill();
-   song = loadSound('zgr.wav');
+   song = loadSound('zgr.mp3');
   
    mic = new p5.AudioIn();
    mic.start();
