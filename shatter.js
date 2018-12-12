@@ -8,9 +8,11 @@ var fin;
 var sel;
 var mic_active;
 var unit, cx, cy;
+var pi = 3.141592;
 
 function preload() {
-    song = loadSound("samples/off.mp3");
+    // song = loadSound("samples/off.mp3");
+    song = loadSound("samples/sample.wav");
     havesong = 1;
 }
 
@@ -114,7 +116,7 @@ function draw() {
 
     background(0);
     drawSpectograph();
-
+        
 }
 function drawSpectograph(){
 
@@ -122,20 +124,27 @@ function drawSpectograph(){
     var amount = cells.value() / 2048 * spectrum.length;
 
     var cell_width = 0.9;
+    // var cell_width = 1.0;
     var cell_depth = 0.99;
+    // var cell_depth = 1.0;
     var calibration = 9.05;
+    var match = calibration / (2* pi);
+    var rmin = note(0);
+    var rmax = note(spectrum.length)+1;
+    // for (i = 1; i < amount; i++) {
+    for (i = amount; i >= 0; i--) {
 
-    for (i = 0; i < amount; i++) {
+        var freq = i;
+        
+        var oct  = 2*pi* (note(freq));
+        var oct2 = 2*pi* (note(freq+1));
+        var oct3 = 2*pi* (note(freq+0.5));
 
-        var freq = i+1;
-        var oct = log(i, 2) * calibration;
-        var oct2 = log(i + cell_width, 2) * calibration;
-        var oct3 = log(i + cell_width * 0.5, 2) * calibration;
        
-        var octv = oct / (2 * 3.1415);
-        var octmax = log(spectrum.length, 2) * calibration;
-        var octvmax = octmax / (2 * 3.1415);
-
+        var octv = octave(freq) *match;
+        // octv = match*octave(freq);
+       // var ratio = height / (2* bmax);
+       
         var x = sin(oct);
         var y = cos(oct);
         
@@ -145,11 +154,10 @@ function drawSpectograph(){
         var x3 = sin(oct3);
         var y3 = cos(oct3);
         
-        var sw = unit / 8;
-        var bmax = (octvmax);
-        var ratio = 2 * unit / bmax;
-        var b1 = (octv) * ratio;
-        var b2 = (octv - cell_depth) * ratio;
+        var sw = unit *2;
+        var b1 = (octv+ cell_depth) *sw/ rmax;
+        var b2 = (octv ) *sw/ rmax;
+        if(b2< 0) b2=0;
 
         var spec = map(spectrum[i], 0, 255, 0, 1);
         fill(colorramp(spec));
@@ -158,11 +166,23 @@ function drawSpectograph(){
         beginShape();
         vertex(b1 * x + width / 2, b1 * y + height / 2);
         vertex(b2 * x + width / 2, b2 * y + height / 2);
+        // vertex(b2 * x3 + width / 2, b2 * y3 + height / 2);
         vertex(b2 * x2 + width / 2, b2 * y2 + height / 2);
         vertex(b1 * x2 + width / 2, b1 * y2 + height / 2);
         vertex(b1 * x3 + width / 2, b1 * y3 + height / 2);
         endShape();
     }
+}
+function octave(freq){
+    return log(freq, 2);
+}
+function angle(octave){
+    return octave * 2*pi;
+}
+function note(freq){
+    var calibration = 9.05;
+    var match = calibration / (2* pi);
+    return log(freq, 2) * match;
 }
 function colorramp(val){
         from = color(0, 0, 32, 255);
