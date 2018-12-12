@@ -9,10 +9,10 @@ var sel;
 var mic_active;
 var unit, cx, cy;
 var pi = 3.141592;
+var polar = 1;
 
 function preload() {
     song = loadSound("samples/off.mp3");
-    // song = loadSound("samples/sample.wav");
     havesong = 1;
 }
 
@@ -114,7 +114,7 @@ function draw() {
     d_progressbar();
     fval = fsl.value() * 0.01;
 
-    background(0);
+    background(colorramp(0));
     drawSpectograph();
 }
 function drawSpectograph(){
@@ -138,11 +138,14 @@ function drawSpectograph(){
     fill(colorramp(spec));
     // var r_null = log(4,2)*match*sw;
     var r_null = 2*match*sw*cell_depth;
-    ellipse(cx, cy, r_null, r_null);
+    if(polar==1){ellipse(cx, cy, r_null, r_null);}
+    else{
+        background(colorramp(0));
+    }
 
     // for (i = 1; i < amount; i++) {
     for (n = 0; Math.pow(2,n) < amount; n++)
-    for (i = Math.pow(2,n); i < Math.pow(2,n+1); i++) {
+    for (i = Math.pow(2,n); i < Math.pow(2,n+1)&& i< amount; i++) {
     // for (i = amount; i >= 0; i--) {
 
         var spec = map(spectrum[i], 0, 255, 0, 1);
@@ -152,6 +155,10 @@ function drawSpectograph(){
         var freq2=freq+0.5;        
         var oct  = 2*pi* (note(freq2-0.5*cell_width));
         var oct2 = 2*pi* (note(freq2+0.5*cell_width));
+        
+        var an  = (note(freq2-0.5*cell_width));
+        var an2 = (note(freq2+0.5*cell_width));
+        
         var oct3 = 2*pi* (note(freq2));
 
        
@@ -180,6 +187,7 @@ function drawSpectograph(){
         fill(colorramp(spec));
 
         var minslices = 4;
+        // minslices=16;
         var slice_amt_i = Math.pow(2,n-2)/minslices;
         // var slice_amt_i = i/minslices;
         var slice_amt_o = slice_amt_i *0.5;
@@ -187,28 +195,58 @@ function drawSpectograph(){
 
         noStroke();
         // stroke(0);
-        beginShape();
-
+        if(polar==1){
+             beginShape();
         vertexPolar(ro,oct);
-        for(slice=slice_amt_o; slice<1.0; slice+=slice_amt_o){
-          vertexPolar(lerp(ro,ro2,slice),lerp(oct,oct2,slice));
-        }
-        vertexPolar(ro2,oct2);
-        
-        vertexPolar(ri2,oct2);
-         for(slice=slice_amt_i; slice<1.0; slice+=slice_amt_i){
-          vertexPolar(lerp(ri2,ri,slice),lerp(oct2,oct,slice));
-        }
-        vertexPolar(ri,oct);
-
-        
+            for(slice=slice_amt_o; slice<1.0; slice+=slice_amt_o){
+              vertexPolar(lerp(ro,ro2,slice),lerp(oct,oct2,slice));
+            }
+            vertexPolar(ro2,oct2);
+            
+            vertexPolar(ri2,oct2);
+            for(slice=slice_amt_i; slice<1.0; slice+=slice_amt_i){
+              vertexPolar(lerp(ri2,ri,slice),lerp(oct2,oct,slice));
+            }
+            vertexPolar(ri,oct);
         endShape();
+        }
+        else {
+            var wrap = 0;
+            if(i +1 >= Math.pow(2,n+1)){
+                wrap =0.5;
+            }
+        // stroke(0);
+            beginShape();
+            vertexPolarity(ro,an,n+1,0);
+            // for(slice=slice_amt_o; slice<1.0; slice+=slice_amt_o){
+            //   vertexPolarity(lerp(ro,ro2,slice),lerp(an,an2,slice),n+1);
+            // }
+            vertexPolarity(ro2,an2,n+1,wrap);
+            
+            vertexPolarity(ri2,an2,n,wrap);
+            // for(slice=slice_amt_i; slice<1.0; slice+=slice_amt_i){
+            //   vertexPolarity(lerp(ri2,ri,slice),lerp(an2,an,slice),n);
+            // }
+            vertexPolarity(ri,an,n,0);
+        endShape();
+        }
+
     }
 }
 function vertexPolar(radius, angle){
     var x = sin(angle);
     var y = cos(angle);
     vertex(radius*x + width/2, radius*y + height/2);
+}
+function vertexPolarity(radius,angle, n, wrap){
+    angle-=wrap;
+    angle%=1.0;
+    angle+=wrap
+    // angle+=1.0;
+    // angle%=1.0;
+    // angle%=1.0;
+    vertex(angle*width,radius*2);
+    // console.log(n);
 }
 function octave(freq){
     return log(freq, 2);
@@ -223,8 +261,8 @@ function note(freq){
     // return log(freq, 2) * match;
 }
 function colorramp(val){
-        from = color(0, 0, 32, 255);
-        // from = color(32, 32, 64, 255);
+        // from = color(0, 0, 32, 255);
+        from = color(32, 32, 128, 255);
         to = color(255, 0, 255, 255);
     
         var spec = val;
@@ -245,6 +283,7 @@ function colorramp(val){
         var color1 = lerpColor(from, to, spec0 * 1);
         var color2 = color(255 * ahr, 255 * gee, 255 * bee);
         return lerpColor(color1, color2, .6);
+        // return lerpColor(color1, color2, .3);
 }
 function playbackMonitor(){
     dur = song.duration();
@@ -284,6 +323,10 @@ function mousePressed() {
 }
 function keyPressed() {
     switch (keyCode) {
+        case 79:
+            if(polar==0)polar=1;
+            else polar = 0;
+            break;
         case 80:
             playPause();
             break;
