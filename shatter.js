@@ -9,6 +9,7 @@ var sel;
 var mic_active;
 var unit, cx, cy;
 var pi = 3.141592;
+var radio;
 var polar = 1;
 
 function preload() {
@@ -41,6 +42,12 @@ function setup_fft(){
     fft.setInput(song);
 }
 function setup_config(){
+
+    createElement("h6", "plot type");
+    radio = createRadio();
+    radio.option('polar');
+    radio.option('linear');
+
     createElement("h6", "Number of cells to draw");
     cells = createSlider(0, 2048, 1024);
     createSpan("Show more rings/octaves");
@@ -93,6 +100,7 @@ function playPause() {
 }
 
 function gotFile(file) {
+    mic_active = 0;
     statusText.html("Playing file: " + file.name);
 
     song.stop();
@@ -195,7 +203,8 @@ function drawSpectograph(){
 
         noStroke();
         // stroke(0);
-        if(polar==1){
+        // if(polar==1){
+        if(radio.value()!='linear'){
              beginShape();
         vertexPolar(ro,oct);
             for(slice=slice_amt_o; slice<1.0; slice+=slice_amt_o){
