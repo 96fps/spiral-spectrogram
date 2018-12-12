@@ -11,8 +11,8 @@ var unit, cx, cy;
 var pi = 3.141592;
 
 function preload() {
-    // song = loadSound("samples/off.mp3");
-    song = loadSound("samples/sample.wav");
+    song = loadSound("samples/off.mp3");
+    // song = loadSound("samples/sample.wav");
     havesong = 1;
 }
 
@@ -42,7 +42,7 @@ function setup_fft(){
 }
 function setup_config(){
     createElement("h6", "Number of cells to draw");
-    cells = createSlider(0, 2048, 512);
+    cells = createSlider(0, 2048, 1024);
     createSpan("Show more rings/octaves");
 
     createElement("h6", "FFT Smoothing");
@@ -103,7 +103,7 @@ function gotFile(file) {
 }
 
 function onResize(){
-    unit = height / 4;
+    unit = height / 2;
     cx = width / 2;
     cy = height / 2;
 }
@@ -116,32 +116,48 @@ function draw() {
 
     background(0);
     drawSpectograph();
-        
 }
 function drawSpectograph(){
 
     var spectrum = fft.analyze();
     var amount = cells.value() / 2048 * spectrum.length;
 
-    var cell_width = 0.9;
-    // var cell_width = 1.0;
-    var cell_depth = 0.99;
+    // var cell_width = 0.9;
+    // var cell_width = .1;
+    var cell_width = 1.0;
+    // var cell_depth = 0.99;
+    var cell_depth = 1.0;
     // var cell_depth = 1.0;
-    var calibration = 9.05;
+    var calibration = 9.065;
     var match = calibration / (2* pi);
     var rmin = note(0);
     var rmax = note(spectrum.length)+1;
+    var sw = unit /rmax;
+
+    var spec = map(spectrum[0], 0, 255, 0, 1);
+    fill(colorramp(spec));
+    // var r_null = log(4,2)*match*sw;
+    var r_null = 2*match*sw*cell_depth;
+    ellipse(cx, cy, r_null, r_null);
+
     // for (i = 1; i < amount; i++) {
-    for (i = amount; i >= 0; i--) {
+    for (n = 0; Math.pow(2,n) < amount; n++)
+    for (i = Math.pow(2,n); i < Math.pow(2,n+1); i++) {
+    // for (i = amount; i >= 0; i--) {
+
+        var spec = map(spectrum[i], 0, 255, 0, 1);
+        // var cell_depth = spec;
 
         var freq = i;
-        
-        var oct  = 2*pi* (note(freq));
-        var oct2 = 2*pi* (note(freq+1));
-        var oct3 = 2*pi* (note(freq+0.5));
+        var freq2=freq+0.5;        
+        var oct  = 2*pi* (note(freq2-0.5*cell_width));
+        var oct2 = 2*pi* (note(freq2+0.5*cell_width));
+        var oct3 = 2*pi* (note(freq2));
 
        
-        var octv = octave(freq) *match;
+        var octv = octave(freq2-0.5*cell_width) *match;
+        var octv2 = octave(freq2+0.5*cell_width) *match;
+        var octv3 = octave(freq2) *match;
         // octv = match*octave(freq);
        // var ratio = height / (2* bmax);
        
@@ -154,24 +170,45 @@ function drawSpectograph(){
         var x3 = sin(oct3);
         var y3 = cos(oct3);
         
-        var sw = unit *2;
-        var b1 = (octv+ cell_depth) *sw/ rmax;
-        var b2 = (octv ) *sw/ rmax;
-        if(b2< 0) b2=0;
-
-        var spec = map(spectrum[i], 0, 255, 0, 1);
+        
+        var ro = sw*(octv+ cell_depth);
+        var ri = sw*(octv );
+        
+        var ro2 = sw*(octv2+ cell_depth);
+        var ri2 = sw*(octv2 );
+      
         fill(colorramp(spec));
 
+        var minslices = 4;
+        var slice_amt_i = Math.pow(2,n-2)/minslices;
+        // var slice_amt_i = i/minslices;
+        var slice_amt_o = slice_amt_i *0.5;
+        if(slice_amt_o>0.5)slice_amt_o=0.5;
+
         noStroke();
+        // stroke(0);
         beginShape();
-        vertex(b1 * x + width / 2, b1 * y + height / 2);
-        vertex(b2 * x + width / 2, b2 * y + height / 2);
-        // vertex(b2 * x3 + width / 2, b2 * y3 + height / 2);
-        vertex(b2 * x2 + width / 2, b2 * y2 + height / 2);
-        vertex(b1 * x2 + width / 2, b1 * y2 + height / 2);
-        vertex(b1 * x3 + width / 2, b1 * y3 + height / 2);
+
+        vertexPolar(ro,oct);
+        for(slice=slice_amt_o; slice<1.0; slice+=slice_amt_o){
+          vertexPolar(lerp(ro,ro2,slice),lerp(oct,oct2,slice));
+        }
+        vertexPolar(ro2,oct2);
+        
+        vertexPolar(ri2,oct2);
+         for(slice=slice_amt_i; slice<1.0; slice+=slice_amt_i){
+          vertexPolar(lerp(ri2,ri,slice),lerp(oct2,oct,slice));
+        }
+        vertexPolar(ri,oct);
+
+        
         endShape();
     }
+}
+function vertexPolar(radius, angle){
+    var x = sin(angle);
+    var y = cos(angle);
+    vertex(radius*x + width/2, radius*y + height/2);
 }
 function octave(freq){
     return log(freq, 2);
@@ -180,12 +217,14 @@ function angle(octave){
     return octave * 2*pi;
 }
 function note(freq){
-    var calibration = 9.05;
+    var calibration = 9.065;
     var match = calibration / (2* pi);
     return log(freq, 2) * match;
+    // return log(freq, 2) * match;
 }
 function colorramp(val){
         from = color(0, 0, 32, 255);
+        // from = color(32, 32, 64, 255);
         to = color(255, 0, 255, 255);
     
         var spec = val;
